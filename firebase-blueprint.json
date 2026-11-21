@@ -1,0 +1,150 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Hồ sơ học sinh hoặc giáo viên sử dụng nền tảng EDU SMART",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 180 },
+        "role": { "type": "string", "enum": ["student", "teacher"] },
+        "className": { "type": "string", "maxLength": 60 },
+        "schoolName": { "type": "string", "maxLength": 140 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email", "role", "className", "schoolName", "createdAt", "updatedAt"]
+    },
+    "StudyPlan": {
+      "title": "StudyPlan",
+      "description": "Nhiệm vụ học tập thuộc Phân hệ 01 STUDY PLAN",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "goal": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "targetMinutes": { "type": "integer" },
+        "actualMinutes": { "type": "integer" },
+        "dueDate": { "type": "string", "minLength": 4, "maxLength": 30 },
+        "status": { "type": "string", "enum": ["planned", "in_progress", "completed", "incomplete"] },
+        "reflection": { "type": "string", "maxLength": 800 },
+        "sheetUrl": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "ownerName", "subject", "title", "goal", "targetMinutes", "actualMinutes", "dueDate", "status", "reflection", "sheetUrl", "createdAt", "updatedAt"]
+    },
+    "ThinkEntry": {
+      "title": "ThinkEntry",
+      "description": "Nhật ký suy nghĩ độc lập trước khi dùng AI thuộc Phân hệ 02 THINK FIRST",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "topic": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "initialAnswer": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "keyArguments": { "type": "string", "maxLength": 1500 },
+        "confidence": { "type": "integer" },
+        "aiFeedback": { "type": "string", "maxLength": 2500 },
+        "unlockedCoach": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "ownerName", "subject", "topic", "initialAnswer", "keyArguments", "confidence", "aiFeedback", "unlockedCoach", "createdAt", "updatedAt"]
+    },
+    "CoachSession": {
+      "title": "CoachSession",
+      "description": "Phiên hội thoại gợi mở tư duy thuộc Phân hệ 03 AI COACH",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "rolePersona": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "modelUsed": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "topic": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "messagesCount": { "type": "integer" },
+        "lastMessagePreview": { "type": "string", "maxLength": 500 },
+        "transcript": { "type": "string", "maxLength": 15000 },
+        "docUrl": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "ownerName", "rolePersona", "modelUsed", "topic", "messagesCount", "lastMessagePreview", "transcript", "docUrl", "createdAt", "updatedAt"]
+    },
+    "FactCheckRecord": {
+      "title": "FactCheckRecord",
+      "description": "Hồ sơ kiểm chứng thông tin và đối chiếu SGK thuộc Phân hệ 04 FACT CHECK",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "claim": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "textbookSource": { "type": "string", "maxLength": 300 },
+        "aiVerdict": { "type": "string", "maxLength": 4000 },
+        "sourcesCount": { "type": "integer" },
+        "studentConclusion": { "type": "string", "maxLength": 2000 },
+        "verdictStatus": { "type": "string", "enum": ["verified", "needs_revision", "disputed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "ownerName", "claim", "textbookSource", "aiVerdict", "sourcesCount", "studentConclusion", "verdictStatus", "createdAt", "updatedAt"]
+    },
+    "SelfTestRecord": {
+      "title": "SelfTestRecord",
+      "description": "Bài tự kiểm tra không có AI hỗ trợ thuộc Phân hệ 05 SELF TEST",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "topic": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "question": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "studentExplanation": { "type": "string", "maxLength": 4000 },
+        "appliedScenario": { "type": "string", "maxLength": 3000 },
+        "score": { "type": "integer" },
+        "rubricFeedback": { "type": "string", "maxLength": 3000 },
+        "durationSeconds": { "type": "integer" },
+        "formUrl": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["draft", "submitted"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "ownerName", "subject", "topic", "question", "studentExplanation", "appliedScenario", "score", "rubricFeedback", "durationSeconds", "formUrl", "status", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Hồ sơ cá nhân (chứa PII email, chỉ chủ sở hữu hoặc quản trị viên đọc/sửa)"
+    },
+    "/studyPlans/{planId}": {
+      "schema": { "$ref": "#/entities/StudyPlan" },
+      "description": "Nhiệm vụ kế hoạch tự học của học sinh"
+    },
+    "/thinkEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/ThinkEntry" },
+      "description": "Nhật ký tư duy độc lập trước khi mở khóa AI Coach"
+    },
+    "/coachSessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/CoachSession" },
+      "description": "Lịch sử phiên cố vấn Socratic cùng AI Coach"
+    },
+    "/factChecks/{checkId}": {
+      "schema": { "$ref": "#/entities/FactCheckRecord" },
+      "description": "Kết quả kiểm chứng thông tin và đối chiếu sách giáo khoa"
+    },
+    "/selfTests/{testId}": {
+      "schema": { "$ref": "#/entities/SelfTestRecord" },
+      "description": "Bài tự kiểm tra năng lực không có AI hỗ trợ"
+    }
+  }
+}

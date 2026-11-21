@@ -1,0 +1,325 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedEmail() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedEmail() && request.auth.token.email == 'trunghieuptdtntnamtramy@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedEmail() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isOwner(ownerId) {
+      return isVerifiedEmail() && request.auth.uid == ownerId;
+    }
+
+    // Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'className', 'schoolName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'role', 'className', 'schoolName', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 180
+        && data.role in ['student', 'teacher']
+        && data.className is string && data.className.size() <= 60
+        && data.schoolName is string && data.schoolName.size() <= 140
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStudyPlan(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'ownerName', 'subject', 'title', 'goal', 'targetMinutes', 'actualMinutes', 'dueDate', 'status', 'reflection', 'sheetUrl', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'ownerName', 'subject', 'title', 'goal', 'targetMinutes', 'actualMinutes', 'dueDate', 'status', 'reflection', 'sheetUrl', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 120
+        && data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 80
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 180
+        && data.goal is string && data.goal.size() >= 1 && data.goal.size() <= 400
+        && data.targetMinutes is int && data.targetMinutes >= 1 && data.targetMinutes <= 600
+        && data.actualMinutes is int && data.actualMinutes >= 0 && data.actualMinutes <= 1200
+        && data.dueDate is string && data.dueDate.size() >= 4 && data.dueDate.size() <= 30
+        && data.status in ['planned', 'in_progress', 'completed', 'incomplete']
+        && data.reflection is string && data.reflection.size() <= 800
+        && data.sheetUrl is string && data.sheetUrl.size() <= 500
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidThinkEntry(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'ownerName', 'subject', 'topic', 'initialAnswer', 'keyArguments', 'confidence', 'aiFeedback', 'unlockedCoach', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'ownerName', 'subject', 'topic', 'initialAnswer', 'keyArguments', 'confidence', 'aiFeedback', 'unlockedCoach', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 120
+        && data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 80
+        && data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 240
+        && data.initialAnswer is string && data.initialAnswer.size() >= 1 && data.initialAnswer.size() <= 3000
+        && data.keyArguments is string && data.keyArguments.size() <= 1500
+        && data.confidence is int && data.confidence >= 1 && data.confidence <= 5
+        && data.aiFeedback is string && data.aiFeedback.size() <= 2500
+        && data.unlockedCoach is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCoachSession(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'ownerName', 'rolePersona', 'modelUsed', 'topic', 'messagesCount', 'lastMessagePreview', 'transcript', 'docUrl', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'ownerName', 'rolePersona', 'modelUsed', 'topic', 'messagesCount', 'lastMessagePreview', 'transcript', 'docUrl', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 120
+        && data.rolePersona is string && data.rolePersona.size() >= 1 && data.rolePersona.size() <= 100
+        && data.modelUsed is string && data.modelUsed.size() >= 1 && data.modelUsed.size() <= 80
+        && data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 240
+        && data.messagesCount is int && data.messagesCount >= 0 && data.messagesCount <= 200
+        && data.lastMessagePreview is string && data.lastMessagePreview.size() <= 500
+        && data.transcript is string && data.transcript.size() <= 15000
+        && data.docUrl is string && data.docUrl.size() <= 500
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFactCheck(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'ownerName', 'claim', 'textbookSource', 'aiVerdict', 'sourcesCount', 'studentConclusion', 'verdictStatus', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'ownerName', 'claim', 'textbookSource', 'aiVerdict', 'sourcesCount', 'studentConclusion', 'verdictStatus', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 120
+        && data.claim is string && data.claim.size() >= 1 && data.claim.size() <= 2000
+        && data.textbookSource is string && data.textbookSource.size() <= 300
+        && data.aiVerdict is string && data.aiVerdict.size() <= 4000
+        && data.sourcesCount is int && data.sourcesCount >= 0 && data.sourcesCount <= 30
+        && data.studentConclusion is string && data.studentConclusion.size() <= 2000
+        && data.verdictStatus in ['verified', 'needs_revision', 'disputed']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSelfTest(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'ownerName', 'subject', 'topic', 'question', 'studentExplanation', 'appliedScenario', 'score', 'rubricFeedback', 'durationSeconds', 'formUrl', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'ownerId', 'ownerName', 'subject', 'topic', 'question', 'studentExplanation', 'appliedScenario', 'score', 'rubricFeedback', 'durationSeconds', 'formUrl', 'status', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 120
+        && data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 80
+        && data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 240
+        && data.question is string && data.question.size() >= 1 && data.question.size() <= 2000
+        && data.studentExplanation is string && data.studentExplanation.size() <= 4000
+        && data.appliedScenario is string && data.appliedScenario.size() <= 3000
+        && data.score is int && data.score >= 0 && data.score <= 100
+        && data.rubricFeedback is string && data.rubricFeedback.size() <= 3000
+        && data.durationSeconds is int && data.durationSeconds >= 0 && data.durationSeconds <= 7200
+        && data.formUrl is string && data.formUrl.size() <= 500
+        && data.status in ['draft', 'submitted']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Admins registry
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create, update, delete: if isValidId(adminId) && isBootstrappedAdmin();
+    }
+
+    // User Profiles (PII protected)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedEmail()
+        && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == request.auth.uid
+        && userId == request.auth.uid
+        && (incoming().role == 'student' || isAdmin())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedEmail()
+        && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(userId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'className', 'schoolName', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Module 01: Study Plans
+    match /studyPlans/{planId} {
+      allow get: if isValidId(planId) && (isOwner(existing().ownerId) || isAdmin());
+      allow list: if isSignedIn() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedEmail()
+        && isValidId(planId)
+        && isValidStudyPlan(incoming())
+        && incoming().id == planId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedEmail()
+        && isValidId(planId)
+        && isValidStudyPlan(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(existing().ownerId) && (
+              (existing().status != 'completed' && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'subject', 'goal', 'targetMinutes', 'actualMinutes', 'dueDate', 'status', 'reflection', 'updatedAt'])) ||
+              (incoming().diff(existing()).affectedKeys().hasOnly(['sheetUrl', 'updatedAt']))
+            )
+          )
+        );
+      allow delete: if isValidId(planId) && (isOwner(existing().ownerId) || isAdmin());
+    }
+
+    // Module 02: Think First
+    match /thinkEntries/{entryId} {
+      allow get: if isValidId(entryId) && (isOwner(existing().ownerId) || isAdmin());
+      allow list: if isSignedIn() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedEmail()
+        && isValidId(entryId)
+        && isValidThinkEntry(incoming())
+        && incoming().id == entryId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedEmail()
+        && isValidId(entryId)
+        && isValidThinkEntry(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(existing().ownerId)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['initialAnswer', 'keyArguments', 'confidence', 'aiFeedback', 'unlockedCoach', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(entryId) && (isOwner(existing().ownerId) || isAdmin());
+    }
+
+    // Module 03: AI Coach Sessions
+    match /coachSessions/{sessionId} {
+      allow get: if isValidId(sessionId) && (isOwner(existing().ownerId) || isAdmin());
+      allow list: if isSignedIn() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedEmail()
+        && isValidId(sessionId)
+        && isValidCoachSession(incoming())
+        && incoming().id == sessionId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedEmail()
+        && isValidId(sessionId)
+        && isValidCoachSession(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(existing().ownerId) && (
+              (incoming().diff(existing()).affectedKeys().hasOnly(['modelUsed', 'messagesCount', 'lastMessagePreview', 'transcript', 'updatedAt'])) ||
+              (incoming().diff(existing()).affectedKeys().hasOnly(['docUrl', 'updatedAt']))
+            )
+          )
+        );
+      allow delete: if isValidId(sessionId) && (isOwner(existing().ownerId) || isAdmin());
+    }
+
+    // Module 04: Fact Check Records
+    match /factChecks/{checkId} {
+      allow get: if isValidId(checkId) && (isOwner(existing().ownerId) || isAdmin());
+      allow list: if isSignedIn() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedEmail()
+        && isValidId(checkId)
+        && isValidFactCheck(incoming())
+        && incoming().id == checkId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedEmail()
+        && isValidId(checkId)
+        && isValidFactCheck(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(existing().ownerId)
+            && incoming().diff(existing()).affectedKeys().hasOnly(['textbookSource', 'studentConclusion', 'verdictStatus', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(checkId) && (isOwner(existing().ownerId) || isAdmin());
+    }
+
+    // Module 05: Self Tests
+    match /selfTests/{testId} {
+      allow get: if isValidId(testId) && (isOwner(existing().ownerId) || isAdmin());
+      allow list: if isSignedIn() && (isBootstrappedAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isVerifiedEmail()
+        && isValidId(testId)
+        && isValidSelfTest(incoming())
+        && incoming().id == testId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedEmail()
+        && isValidId(testId)
+        && isValidSelfTest(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() || (
+            isOwner(existing().ownerId) && (
+              (existing().status != 'submitted' && incoming().diff(existing()).affectedKeys().hasOnly(['studentExplanation', 'appliedScenario', 'score', 'rubricFeedback', 'durationSeconds', 'status', 'updatedAt'])) ||
+              (incoming().diff(existing()).affectedKeys().hasOnly(['formUrl', 'updatedAt']))
+            )
+          )
+        );
+      allow delete: if isValidId(testId) && (isOwner(existing().ownerId) || isAdmin());
+    }
+  }
+}

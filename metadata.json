@@ -1,0 +1,6 @@
+{
+  "name": "EDU SMART | PTDTNT THPT Quảng Nam",
+  "description": "Nền tảng hỗ trợ năng lực tự học thông minh với 05 phân hệ rèn luyện tư duy độc lập, kiểm chứng tri thức và tích hợp Google Workspace dành cho học sinh Trường PTDTNT THPT Quảng Nam.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
